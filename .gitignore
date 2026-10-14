@@ -1,0 +1,27 @@
+# Flutter & Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+flutter_*.png
+
+# .NET / C#
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+.idea/
+.vs/
+*.suo
+
+# macOS / OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Scratch & Logs
+*.log
