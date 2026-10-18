@@ -8,6 +8,9 @@ class TaskRepository {
   final TaskApiService _apiService;
   final TaskCacheService _cacheService;
 
+  bool _isOffline = false;
+  bool get isOffline => _isOffline;
+
   TaskRepository({
     required TaskApiService apiService,
     required TaskCacheService cacheService,
@@ -72,7 +75,14 @@ class TaskRepository {
     try {
       await syncOfflineTasks();
 
-      final remoteTasks = await _apiService.fetchTasks();
+      final List<Tasks> remoteTasks;
+      try {
+        remoteTasks = await _apiService.fetchTasks();
+        _isOffline = false;
+      } catch (_) {
+        _isOffline = true;
+        rethrow;
+      }
 
       try {
         await _cacheService.cacheTasks(remoteTasks);
@@ -109,6 +119,7 @@ class TaskRepository {
       }
       return createdTask;
     } catch (e) {
+      _isOffline = true;
       debugPrint('API unavailable when creating task, switching to offline creation: $e');
       final offlineTask = await createOfflineTask(task);
       return offlineTask;
@@ -120,8 +131,10 @@ class TaskRepository {
     try {
       await syncOfflineTasks();
       await _apiService.updateTask(task.id, task);
+      _isOffline = false;
       await _cacheService.saveOfflineUpdate(task.copyWith(isPendingUpdate: false));
     } catch (e) {
+      _isOffline = true;
       debugPrint('API unavailable when updating task, saving update locally: $e');
       await _cacheService.saveOfflineUpdate(task);
     }
@@ -137,8 +150,10 @@ class TaskRepository {
       }
       await syncOfflineTasks();
       await _apiService.deleteTask(id);
+      _isOffline = false;
       await _cacheService.deleteCachedTask(id);
     } catch (e) {
+      _isOffline = true;
       debugPrint('API unavailable when deleting task, marking for offline deletion: $e');
       await _cacheService.saveOfflineDelete(id);
     }

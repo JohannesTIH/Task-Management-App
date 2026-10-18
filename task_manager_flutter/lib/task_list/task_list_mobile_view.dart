@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../main.dart';
 import '../models/tasks.dart';
 import '../task_details/task_details_view.dart';
+import '../widgets/add_task_bottom_sheet.dart';
+import '../widgets/task_card.dart';
 import '../task_list/task_list_view_model.dart';
 
 class TaskListMobileView extends StatefulWidget {
@@ -25,9 +27,7 @@ class _TaskListMobileViewState extends State<TaskListMobileView> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: widget.isDesktop
-          ? null
-          : _buildDrawer(context, viewModel),
+      drawer: widget.isDesktop ? null : _buildDrawer(context, viewModel),
       appBar: _selectedNavIndex == 0
           ? null
           : AppBar(
@@ -37,8 +37,12 @@ class _TaskListMobileViewState extends State<TaskListMobileView> {
                   ? null
                   : Builder(
                       builder: (drawerContext) => IconButton(
-                        icon: const Icon(Icons.menu_rounded, color: Colors.black87),
-                        onPressed: () => Scaffold.of(drawerContext).openDrawer(),
+                        icon: const Icon(
+                          Icons.menu_rounded,
+                          color: Colors.black87,
+                        ),
+                        onPressed: () =>
+                            Scaffold.of(drawerContext).openDrawer(),
                       ),
                     ),
               title: const Text(
@@ -51,8 +55,33 @@ class _TaskListMobileViewState extends State<TaskListMobileView> {
               ),
               centerTitle: true,
             ),
-      body: _buildPageBody(context, viewModel),
+      body: Column(
+        children: [
+          if (viewModel.isOffline) _buildOfflineBanner(),
+          Expanded(child: _buildPageBody(context, viewModel)),
+        ],
+      ),
       bottomNavigationBar: _buildBottomNavigationBar(viewModel),
+    );
+  }
+
+  Widget _buildOfflineBanner() {
+    return Container(
+      width: double.infinity,
+      color: Colors.amber.shade100,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: const Row(
+        children: [
+          Icon(Icons.cloud_off_outlined, color: Colors.black87, size: 20),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'No internet connection all tasks created will be stored locally.',
+              style: TextStyle(color: Colors.black87, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -208,7 +237,11 @@ class _TaskListMobileViewState extends State<TaskListMobileView> {
                   builder: (drawerContext) => IconButton(
                     padding: EdgeInsets.zero,
                     alignment: Alignment.centerLeft,
-                    icon: const Icon(Icons.menu_rounded, color: Colors.black87, size: 28),
+                    icon: const Icon(
+                      Icons.menu_rounded,
+                      color: Colors.black87,
+                      size: 28,
+                    ),
                     onPressed: () => Scaffold.of(drawerContext).openDrawer(),
                   ),
                 ),
@@ -780,20 +813,14 @@ class _TaskListMobileViewState extends State<TaskListMobileView> {
     }
 
     if (viewModel.state == ViewState.error) {
+      if (viewModel.isOffline) {
+        return const SizedBox.shrink();
+      }
+
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              viewModel.errorMessage ?? 'Error occurred',
-              style: const TextStyle(color: Colors.red),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: viewModel.fetchTasks,
-              child: const Text('Retry'),
-            ),
-          ],
+        child: Text(
+          viewModel.errorMessage ?? 'Error occurred',
+          style: const TextStyle(color: Colors.red),
         ),
       );
     }
@@ -887,151 +914,12 @@ class _TaskListMobileViewState extends State<TaskListMobileView> {
     TaskListViewModel viewModel,
     Tasks task,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Checkbox(
-            value: task.isCompleted,
-            activeColor: const Color(0xFF1E60F7),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-            onChanged: (_) => viewModel.toggleTaskStatus(task),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => _navigateToTaskDetails(context, task),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    task.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      decoration: task.isCompleted
-                          ? TextDecoration.lineThrough
-                          : null,
-                      color: task.isCompleted ? Colors.grey : Colors.black87,
-                    ),
-                  ),
-                  if (task.description != null &&
-                      task.description!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      task.description!,
-                      style: const TextStyle(fontSize: 13, color: Colors.grey),
-                    ),
-                  ],
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      _buildPriorityBadge(task.priority),
-                      if (task.category != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1E60F7)
-                                .withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(5),
-                            border: Border.all(
-                              color: const Color(0xFF1E60F7)
-                                  .withValues(alpha: 0.25),
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            task.category!,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E60F7),
-                            ),
-                          ),
-                        ),
-                      if (task.isOffline || task.isPendingUpdate)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.shade50,
-                            borderRadius: BorderRadius.circular(5),
-                            border: Border.all(
-                              color: Colors.amber.shade400,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.cloud_off_rounded,
-                                size: 12,
-                                color: Colors.amber.shade800,
-                              ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  task.isOffline ? 'Offline' : 'Edited',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.amber.shade900,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.edit_outlined,
-              color: Color(0xFF1E60F7),
-              size: 22,
-            ),
-            tooltip: 'Edit Task',
-            onPressed: () => _navigateToTaskDetails(context, task),
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.delete_outline,
-              color: Colors.redAccent,
-              size: 22,
-            ),
-            tooltip: 'Delete Task',
-            onPressed: () => _confirmDeleteTask(context, viewModel, task),
-          ),
-        ],
-      ),
+    return TaskCard(
+      task: task,
+      onToggle: () => viewModel.toggleTaskStatus(task),
+      onOpen: () => _navigateToTaskDetails(context, task),
+      onEdit: () => _navigateToTaskDetails(context, task),
+      onDelete: () => _confirmDeleteTask(context, viewModel, task),
     );
   }
 
@@ -1147,38 +1035,6 @@ class _TaskListMobileViewState extends State<TaskListMobileView> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => TaskDetailsView(task: task)),
-    );
-  }
-
-  Widget _buildPriorityBadge(int priority) {
-    String label = 'Low';
-    Color color = Colors.green;
-
-    if (priority == 1) {
-      label = 'Medium';
-      color = Colors.orange;
-    } else if (priority == 2) {
-      label = 'High';
-      color = Colors.red;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(5),
-        border: Border(
-          left: BorderSide(color: color, width: 3),
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
-      ),
     );
   }
 
@@ -1307,317 +1163,32 @@ class _TaskListMobileViewState extends State<TaskListMobileView> {
   }
 
   void _showAddTaskBottomSheet(BuildContext context) {
-    final titleController = TextEditingController();
-    final descController = TextEditingController();
-    int selectedPriority = 1;
-    DateTime selectedDueDate = DateTime.now();
-
     final viewModel = context.read<TaskListViewModel>();
-    String selectedCategory =
-        viewModel.selectedCategoryFilter ?? viewModel.categories.first;
-
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: const Color(0xFFF7F9FC),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (modalContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
-                top: 24,
-                left: 20,
-                right: 20,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Center(
-                      child: Text(
-                        'Add New Task',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Task Title',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: titleController,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        hintText: 'Enter task title...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Category',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        ...viewModel.categories.map((cat) {
-                          final isCatSelected = selectedCategory == cat;
-                          return ChoiceChip(
-                            label: Text(cat),
-                            selected: isCatSelected,
-                            selectedColor: const Color(0xFF1E60F7)
-                                .withValues(alpha: 0.2),
-                            labelStyle: TextStyle(
-                              color: isCatSelected
-                                  ? const Color(0xFF1E60F7)
-                                  : Colors.black87,
-                              fontWeight: isCatSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                            onSelected: (_) =>
-                                setModalState(() => selectedCategory = cat),
-                          );
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Description',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: descController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        hintText: 'Enter task description (optional)...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Priority Level',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        ChoiceChip(
-                          label: const Text('Low'),
-                          selected: selectedPriority == 0,
-                          selectedColor: Colors.green.withValues(alpha: 0.2),
-                          labelStyle: TextStyle(
-                            color: selectedPriority == 0
-                                ? Colors.green
-                                : Colors.black87,
-                            fontWeight: selectedPriority == 0
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                          onSelected: (_) =>
-                              setModalState(() => selectedPriority = 0),
-                        ),
-                        const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: const Text('Medium'),
-                          selected: selectedPriority == 1,
-                          selectedColor: Colors.orange.withValues(alpha: 0.2),
-                          labelStyle: TextStyle(
-                            color: selectedPriority == 1
-                                ? Colors.orange
-                                : Colors.black87,
-                            fontWeight: selectedPriority == 1
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                          onSelected: (_) =>
-                              setModalState(() => selectedPriority = 1),
-                        ),
-                        const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: const Text('High'),
-                          selected: selectedPriority == 2,
-                          selectedColor: Colors.red.withValues(alpha: 0.2),
-                          labelStyle: TextStyle(
-                            color: selectedPriority == 2
-                                ? Colors.red
-                                : Colors.black87,
-                            fontWeight: selectedPriority == 2
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                          onSelected: (_) =>
-                              setModalState(() => selectedPriority = 2),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Due Date & Time',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_month,
-                                color: Color(0xFF1E60F7),
-                                size: 20,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                '${_getMonthName(selectedDueDate.month).substring(0, 3)} ${selectedDueDate.day}, ${selectedDueDate.year} at ${_formatTime(selectedDueDate)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                          InkWell(
-                            onTap: () async {
-                              final pickedDate = await showDatePicker(
-                                context: context,
-                                initialDate: selectedDueDate,
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime(2100),
-                              );
-                              if (pickedDate != null) {
-                                final pickedTime = await showTimePicker(
-                                  context: context,
-                                  initialTime: TimeOfDay.fromDateTime(
-                                    selectedDueDate,
-                                  ),
-                                );
-                                if (pickedTime != null) {
-                                  setModalState(() {
-                                    selectedDueDate = DateTime(
-                                      pickedDate.year,
-                                      pickedDate.month,
-                                      pickedDate.day,
-                                      pickedTime.hour,
-                                      pickedTime.minute,
-                                    );
-                                  });
-                                }
-                              }
-                            },
-                            child: const Text(
-                              'Select',
-                              style: TextStyle(
-                                color: Color(0xFF1E60F7),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1E60F7),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        onPressed: () async {
-                          final title = titleController.text.trim();
-                          if (title.isEmpty) {
-                            _showCenterErrorSnackBar(
-                              modalContext,
-                              'Client-Side Error (400 Bad Request): Task Title cannot be empty or blank.',
-                            );
-                            return;
-                          }
-
-                          final success = await context
-                              .read<TaskListViewModel>()
-                              .addTask(
-                                title,
-                                descController.text.trim(),
-                                selectedPriority,
-                                selectedDueDate,
-                                selectedCategory,
-                              );
-                          if (context.mounted) {
-                            if (success) {
-                              Navigator.pop(modalContext);
-                            } else {
-                              final error = context
-                                  .read<TaskListViewModel>()
-                                  .errorMessage;
-                              if (error != null) {
-                                _showCenterErrorSnackBar(modalContext, error);
-                              }
-                            }
-                          }
-                        },
-                        child: const Text(
-                          'Save Task',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+      builder: (modalContext) => AddTaskBottomSheet(
+        categories: viewModel.categories,
+        initialCategory:
+            viewModel.selectedCategoryFilter ?? viewModel.categories.first,
+        onSave: (title, description, priority, dueDate, category) async {
+          final success = await viewModel.addTask(
+            title,
+            description,
+            priority,
+            dueDate,
+            category,
+          );
+          return success
+              ? null
+              : viewModel.errorMessage ?? 'Could not save task.';
+        },
+        onError: (message) => _showCenterErrorSnackBar(modalContext, message),
+      ),
     );
   }
 

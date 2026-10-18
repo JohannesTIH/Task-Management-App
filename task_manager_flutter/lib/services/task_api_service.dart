@@ -30,7 +30,7 @@ class TaskApiService {
     final errorStr = e.toString();
     // 1. Check for precise mobile offline status via string matching
     if (errorStr.contains('SocketException') || errorStr.contains('Failed host lookup')) {
-      throw Exception('Network connection error. Please connect to the internet.');
+      throw Exception('Network unavailable.');
     }
 
     // 2. Generic client/web errors

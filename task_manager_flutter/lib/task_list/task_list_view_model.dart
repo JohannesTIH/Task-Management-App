@@ -12,6 +12,7 @@ class TaskListViewModel extends ChangeNotifier {
 
   ViewState _state = ViewState.initial;
   ViewState get state => _state;
+  bool get isOffline => _repository.isOffline;
 
   List<Tasks> _allTasks = [];
   List<Tasks> get tasks => _filteredTasks();
