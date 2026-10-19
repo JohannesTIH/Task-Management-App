@@ -180,5 +180,5 @@ dotnet build
 ![Task Manager desktop task list](screenshots/desktop-task-list.png)
 ![Task Manager desktop overdue screen](screenshots/desktop-overdue-screen.png)
 ![Task Manager desktop priority screen](screenshots/desktop-priority-screen.png)
-![Task Manager desktop category screen](screenshots/desktop-category-screen.png)
+
 
