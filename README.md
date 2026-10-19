@@ -2,6 +2,24 @@
 
 A task management app built with Flutter and an ASP.NET Core REST API. The Flutter app supports mobile, web, and desktop layouts. It can read cached tasks when the API is unavailable, and syncs normal task changes with the API.
 
+## Screenshots
+
+### Mobile app
+
+![Task Manager mobile welcome screen](screenshots/mobile-welcome-screen.png)
+![Task Manager mobile task list](screenshots/mobile-task-list.png)
+![Task Manager mobile overdue screen](screenshots/mobile-overdue-screen.png)
+![Task Manager mobile priority screen](screenshots/mobile-priority-screen.png)
+![Task Manager mobile category screen](screenshots/mobile-category-screen.png)
+
+### Desktop app
+
+![Task Manager desktop welcome screen](screenshots/desktop-welcome-screen.png)
+![Task Manager desktop task list](screenshots/desktop-task-list.png)
+![Task Manager desktop overdue screen](screenshots/desktop-overdue-screen.png)
+![Task Manager desktop priority screen](screenshots/desktop-priority-screen.png)
+![Task Manager desktop category screen](screenshots/desktop-category-screen.png)
+
 ## Project layout
 
 ```text
