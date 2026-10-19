@@ -12,13 +12,6 @@ A task management app built with Flutter and an ASP.NET Core REST API. The Flutt
 ![Task Manager mobile priority screen](screenshots/mobile-priority-screen.png)
 ![Task Manager mobile category screen](screenshots/mobile-category-screen.png)
 
-### Desktop app
-
-![Task Manager desktop welcome screen](screenshots/desktop-welcome-screen.png)
-![Task Manager desktop task list](screenshots/desktop-task-list.png)
-![Task Manager desktop overdue screen](screenshots/desktop-overdue-screen.png)
-![Task Manager desktop priority screen](screenshots/desktop-priority-screen.png)
-![Task Manager desktop category screen](screenshots/desktop-category-screen.png)
 
 ## Project layout
 
@@ -180,3 +173,12 @@ From `../TaskManagerApi`, build the API with:
 ```sh
 dotnet build
 ```
+
+### Desktop app
+
+![Task Manager desktop welcome screen](screenshots/desktop-welcome-screen.png)
+![Task Manager desktop task list](screenshots/desktop-task-list.png)
+![Task Manager desktop overdue screen](screenshots/desktop-overdue-screen.png)
+![Task Manager desktop priority screen](screenshots/desktop-priority-screen.png)
+![Task Manager desktop category screen](screenshots/desktop-category-screen.png)
+
